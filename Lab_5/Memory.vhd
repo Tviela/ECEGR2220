@@ -1,26 +1,3 @@
-
-
--- Developer : Don Dang, Brigid Kelly
--- Project   : Lab 5
--- Filename  : Memory.vhd
--- Date      : 5/14/18
--- Class     : Microprocessor Designs
--- Instructor: Ken Rabold
--- Purpose   : 
---             Design and implement a Memory and Register Bank
---
--- Notes     : 
--- This excercise is developed using Questa Sim 
-			
--- Developer	Date		Activities
--- DD		5/14/18 	Download and modify Memory.vhd
--- BK           5/14/18         Completed writing code
--- BK           5/18/18         Full compile of components
---BK            5/23/18         Full test complete, final upload
-
-
-
-
 LIBRARY ieee;
 Use ieee.std_logic_1164.all;
 Use ieee.numeric_std.all;
@@ -83,9 +60,6 @@ begin
 end staticRAM;	
 
 
----------------------------------------------------------------------
-------- START OF REGISTER BANK ENTITY
----------------------------------------------------------------------
 LIBRARY ieee;
 Use ieee.std_logic_1164.all;
 Use ieee.numeric_std.all;
@@ -197,9 +171,7 @@ architecture remember of Registers is
 
 end remember;
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------
--------START OF SINGLE BIT FLIP FLOP FOR REGISTER-------------------
---------------------------------------------------------------------
+
 
 Library ieee;
 Use ieee.std_logic_1164.all;
@@ -228,13 +200,6 @@ begin
 end architecture memlike;
 
 
-
-
-----------------------------------------------
-------------START OF 32 BIT REGISTER----------
-----------------------------------------------
------8-BIT REGISTER SEFCTION-----------------
------------------------------------------------------------------
 Library ieee;
 Use ieee.std_logic_1164.all;
 Use ieee.numeric_std.all;
@@ -269,11 +234,6 @@ begin
 	m6: bitstorage port map(datain(6),enout,writein, dataout(6));
 	m7: bitstorage port map(datain(7),enout,writein, dataout(7));
 end architecture memmy;
-
---------------------------------------------------------------------------------
-----------------------32-BIT REGISTEER SECTION----------------------------------
---------------------------------------------------------------------------------
-
 
 -- EnableOut: 
 -- 0: Active     - Enable output data. Data out
