@@ -1,9 +1,3 @@
-
---------------------------------------------------------------------------------
---
--- Test Bench for LAB #6
---
---------------------------------------------------------------------------------
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.std_logic_unsigned.all;
@@ -11,6 +5,7 @@ USE ieee.numeric_std.ALL;
 
 ENTITY tProcessor_vhd IS
 END tProcessor_vhd;
+
 
 ARCHITECTURE behavior OF tProcessor_vhd IS 
 

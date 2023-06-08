@@ -1,8 +1,3 @@
---------------------------------------------------------------------------------
---
--- LAB #6 - Processor 
---
---------------------------------------------------------------------------------
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_ARITH.ALL;
@@ -10,7 +5,7 @@ use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity Processor is
     Port ( reset : in  std_logic;
-	   clock : in  std_logic);
+	       clock : in  std_logic);
 end Processor;
 
 architecture holistic of Processor is
@@ -75,7 +70,7 @@ architecture holistic of Processor is
 		 Clock: in std_logic;
 		 PCin: in std_logic_vector(31 downto 0);
 		 PCout: out std_logic_vector(31 downto 0));
-	end component;
+	end component ProgramCounter;
 
 	component adder_subtracter
 		port(	datain_a: in std_logic_vector(31 downto 0);
@@ -84,8 +79,110 @@ architecture holistic of Processor is
 			dataout: out std_logic_vector(31 downto 0);
 			co: out std_logic);
 	end component adder_subtracter;
+	
+
+	
+signal  PCout : std_logic_vector(31 downto 0);  --output of program counter to IM
+--signal  PCplusFour : std_logic_vector(31 downto 0):= "00000000000000000000000000000100"; -- Signal for adding 4 to current instruction memory address
+signal  PCAdderOut : std_logic_vector(31 downto 0);  --result of PC+4
+signal  PCAddco : std_logic;  --Program counter adder carryout
+signal  BNEout: std_logic;  --Branch logic output
+signal  BranchAddOut: std_logic_vector(31 downto 0);  --  Signal out of add/sub for branch instructions
+signal  BranchAddCarry: std_logic;
+
+signal  PcMuxOut : std_logic_vector(31 downto 0);  -- Output from PC Mux
+
+	
+signal ImmGenOut : std_logic_vector(31 downto 0);  --output of immediate generator
+signal IMtoImmGen : std_logic_vector(31 downto 0);  -- Output from instruction memory to immediate generator
+
+	
+signal IMOUT : std_logic_vector(31 downto 0);  --Output of instruction memory bank
+
+	
+signal RegDat1 : std_logic_vector(31 downto 0); -- Both signals are outputs from registers
+signal RegDat2 : std_logic_vector(31 downto 0);  
+
+
+signal Mux2ALU : std_logic_vector(31 downto 0); -- Input to ALU
+signal ALUOut  : std_logic_vector(31 downto 0); -- Output from ALU
+signal ALUzero : std_logic;  -- Output from ALU zero detector
+
+	
+signal MemReadOut : std_logic_vector(31 downto 0);
+
+signal MeMuxOut   : std_logic_vector(31 downto 0);
+
+signal Acct30bit  : std_logic_vector(29 downto 0);  -- This is a special signal to account for proper addressing of memory
+
+
+signal BranchCTRL   : std_logic_vector(1 downto 0);
+signal MemReadCTRL  : std_logic;
+signal MemToRegCTRL : std_logic;
+signal ALUCTRLCTRL  : std_logic_vector(4 downto 0);
+signal MemWriteCTRL : std_logic;
+signal ALUSrcCTRL   : std_logic;
+signal RegWriteCTRL : std_logic;
+signal ImmGenCTRL   : std_logic_vector(1 downto 0);
 
 begin
-	-- Add your code here
+
+	
+	PC :         ProgramCounter   port map(reset, clock, PCMuxOut, PCout);
+	PCAdder:     adder_subtracter  port map(PCout,  "00000000000000000000000000000100", '0', PCAdderOut, PCAddco);
+	Branchadder: adder_subtracter port map(PCout, ImmGenOut, '0', BranchAddOut, BranchAddCarry);
+	PCmux:       BusMux2To1       port map(BNEout, PCAdderOut,  BranchAddOut, PCMuxOut);	
+       -- BranchOrNot: branchlogic      port map(BranchCTRL, ALUZero, BNEOut);
+
+	
+	IM :         InstructionRAM   port map(reset, clock, PCOut(31 downto 2), IMOUT);
+
+
+	
+	CTRL :       Control          port map(clock, IMOUT(6 downto 0), IMOUT(14 downto 12), IMOUT(31 downto 25), BranchCTRL, MemReadCTRL, MemToRegCTRL,
+														 ALUCTRLCTRL, MemWriteCTRL, ALUSrcCTRL, RegWriteCTRL, ImmGenCTRL);
+
+	
+	Reg32 :      Registers        port map(IMOUT(19 downto 15), IMOUT(24 downto 20), IMOUT(11 downto 7), MeMuxOut, RegWriteCTRL, RegDat1, RegDat2);
+       
+	RegMux:      BusMux2To1       port map(ALUSrcCTRL, RegDat2, ImmGenOut, Mux2ALU);
+
+
+	
+
+	
+	TheALU :     ALU              port map(RegDat1, Mux2ALU, ALUCTRLCTRL, ALUZero, ALUOut);
+
+	
+	Acct30bit <= "0000" & ALUOUT(27 downto 2);
+	
+	DMEM :       RAM              port map(reset, clock, MemReadCTRL, MemWriteCTRL, Acct30bit, RegDat2, MemReadOut);
+
+	MeMux :      BusMux2To1       port map(MemToRegCTRL, ALUOut, MemReadOut, MeMuxOut);
+
+	
+--IGEN :       ImmGen           port map(ImmGenCTRL, IMOUT, ImmGenOut);
+
+	with ImmGenCTRL & IMOUT(31) select
+	ImmGenOut <=   "111111111111111111111" & IMOUT(30 downto 20) when "001",  --I_type
+                       "000000000000000000000" & IMOUT(30 downto 20) when "000",  --I_type
+		       "111111111111111111111" & IMOUT(30 downto 25) & IMOUT(11 downto 7) when "011",  --S_type
+                       "000000000000000000000" & IMOUT(30 downto 25) & IMOUT(11 downto 7) when "010",  --S_type
+		        "11111111111111111111" & IMOUT(7) & IMOUT(30 downto 25) & IMOUT(11 downto 8) & '0' when "101", --B_type
+                        "00000000000000000000" & IMOUT(7) & IMOUT(30 downto 25) & IMOUT(11 downto 8) & '0' when "100", --B_type
+			                   "1" & IMOUT(30 downto 12) & "000000000000" when "111", --U_type
+                                           "0" & IMOUT(30 downto 12) & "000000000000" when "110", --U_type
+            "ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" when others;
+	
+
+
+
+	with BranchCTRL & ALUZero select
+	BNEOut <=   '1' when "101",
+                         '1' when "010",
+		         '0' when others;
+ 
+
 end holistic;
+
 
