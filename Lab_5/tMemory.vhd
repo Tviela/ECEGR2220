@@ -1,25 +1,3 @@
-
-
--- Developer : Don Dang, Brigid Kelly
--- Project   : Lab 5
--- Filename  : Memory.vhd
--- Date      : 5/14/18
--- Class     : Microprocessor Designs
--- Instructor: Ken Rabold
--- Purpose   : 
---             Design and implement a Memory and Register Bank
---
--- Notes     : 
--- This excercise is developed using Questa Sim 
-			
--- Developer	Date		Activities
--- BK		5/2018		Added read/write register test data
-
---------------------------------------------------------------------------------
---
--- Test Bench for LAB #5 - Memory and Register Bank
---
---------------------------------------------------------------------------------
 LIBRARY ieee;
 Use ieee.std_logic_1164.all;
 Use ieee.numeric_std.all;
@@ -210,9 +188,7 @@ BEGIN
 		clock <= '0';
 		wait for 5 ns;
 
---5/20/18: Bri added test data
-		-- Register Bank tests
---Writing to the registers at at specific address
+
 		dataIn   <= X"11111111";
 		writeReg <= "00001";
 		writeCmd <= '1';
